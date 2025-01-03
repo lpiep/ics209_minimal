@@ -1,0 +1,38 @@
+on:
+  push:
+    branches: main
+  schedule: # monthly on the 28th
+    - cron: '0 1 28 * *'
+
+jobs:
+  import-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+
+      - name: Install packages
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::tidyverse 
+            any::arrow
+            any::glue
+            any::fs
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Sync Current Data
+        env:
+          FAMDWH_USR: ${{ secrets.FAMDWH_USR }}
+          FAMDWH_PW: ${{ secrets.FAMDWH_PW }}
+        run: Rscript -e 'source("R/parse_current.r")'
+
+      - name: Commit results
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add data/current/current_cleaned.parquet
+          git commit -m 'Data updated' || echo "No changes to commit"
+          git push origin || echo "No changes to commit"
