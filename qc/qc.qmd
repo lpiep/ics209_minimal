@@ -1,0 +1,34 @@
+---
+title: "QC"
+format: markdown_github
+---
+
+```{r, include = FALSE}
+library(tidyverse)
+library(arrow)
+options(scipen = 999)
+
+dat <- bind_rows(
+  read_parquet('../data/historical/historical_cleaned.parquet'),
+  read_parquet('../data/current/current_cleaned.parquet')
+)
+```
+
+
+Summarize some stats by year to see if we have any glaring issues from the varying
+file formats over time. 
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+dat %>% 
+  group_by(year = year(ics_wildfire_ignition_date)) %>%
+  select(ics_wildfire_fatalities, ics_wildfire_area, ics_wildfire_struct_destroyed) %>% 
+  pivot_longer(-year) %>%
+  ggplot() + 
+    geom_boxplot(aes(x=year, y=value, group = year)) + 
+    geom_vline(xintercept = c(2000.5, 2012.5), color = 'red', linetype = 'dashed') + 
+    geom_rect(xmin = 2020.5, xmax = 2021.5, ymin = -Inf, ymax = Inf, fill = 'red', alpha = .25, linetype = 'dashed') + 
+    facet_wrap(~name, ncol = 1, scale = 'free_y') + 
+    scale_y_continuous(transform = 'log')
+```
+
+2021 is missing the main report table that links all these, so all but two fires are missing. 
