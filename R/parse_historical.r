@@ -50,7 +50,7 @@ dat_99_02 <- list(
   transmute(
     ics_id = INCIDENT_NUMBER,
     ics_wildfire_ignition_date = as_date(mdy_hms(STARTDATE, quiet = TRUE)),
-    ics_wildfire_fatalities = FATALITIES,
+    ics_wildfire_fatalities_tot = FATALITIES,
     ics_name = ENAME,
     ics_wildfire_area = ACRES * 0.00404686,
     ics_wildfire_struct_destroyed = DCOUNT,
@@ -99,7 +99,7 @@ dat_02_13 <- list(
   transmute(
     ics_id = INCIDENT_NUMBER,
     ics_wildfire_ignition_date = as_date(mdy_hms(START_DATE, quiet = TRUE)),
-    ics_wildfire_fatalities = FATALITIES,
+    ics_wildfire_fatalities_tot = FATALITIES,
     ics_name = INCIDENT_NAME,
     ics_wildfire_area = case_when(
       AREA_MEASUREMENT == 'ACRES' ~ AREA * 0.00404686,
@@ -123,8 +123,6 @@ dat_02_13 <- list(
 
   
 # 2013 - pres
-# need to add SIT209_HISTORY_INCIDENT_209_CSLTY_ILLNESSES_
-# need to figure out how that and structures join to history_incidents table (seems to be via INC209R_IDENTIFIER)
 fips_codes <- read_parquet('data/fips_codes.parquet')
 fips_codes_states <- fips_codes %>% select(-matches('county')) %>% distinct()
 fips_codes_counties <- fips_codes %>% select(-state_name, -state) %>% distinct()
@@ -203,10 +201,14 @@ dat_13_plus <- list(
     bind_rows(.id = 'data_year') %>%
     mutate(data_year = str_extract(data_year, '(?<=data/historical/extracts/)[0-9]{4}')) %>%
     left_join(fatality_code, by = 'data_year') %>% 
-    filter(CIT_IDENTIFIER == LUCODES_IDENTIFIER & RESPONDER_PUBLIC_FLAG == 'P') %>% # public deaths
+    filter(CIT_IDENTIFIER == LUCODES_IDENTIFIER) %>%#  & RESPONDER_PUBLIC_FLAG == 'P') %>% # public deaths
     group_by(INC209R_IDENTIFIER) %>% 
-    arrange(QTY_TO_DATE) %>% 
-    slice_tail(n=1) %>%
+    #arrange(QTY_TO_DATE) %>% 
+    #slice_tail(n=1) %>%
+    summarize(
+      QTY_TO_DATE_PUBLIC = max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'P')),
+      QTY_TO_DATE_TOT = max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'P')) + max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'R'))
+    ) %>% 
     ungroup() 
 ) %>%
   reduce(full_join, by = 'INC209R_IDENTIFIER') %>% 
@@ -217,7 +219,8 @@ dat_13_plus <- list(
     ics_id = INCIDENT_NUMBER,
     #ics_irwin_id = IRWIN_IDENTIFIER,
     ics_wildfire_ignition_date = as_date(mdy_hms(DISCOVERY_DATE, quiet = TRUE)),
-    ics_wildfire_fatalities = QTY_TO_DATE, # not found
+    ics_wildfire_fatalities_tot = QTY_TO_DATE_TOT,
+    ics_wildfire_fatalities_civ = QTY_TO_DATE_PUBLIC,
     ics_name = INCIDENT_NAME,
     ics_wildfire_area = CURR_INCIDENT_AREA * 0.00404686, # acres to km2
     ics_wildfire_struct_destroyed = QTY_DESTROYED,
@@ -232,7 +235,7 @@ dat_13_plus <- list(
     ics_irwin_id = IRWIN_IDENTIFIER
   ) %>%
   distinct() %>%   
-  filter(ics_wildfire_ignition_date < today()) # remove dates in the future
+  filter(ics_wildfire_ignition_date < ymd('2025-01-01')) # remove dates in the future
 
 # Join and Clean 
 
