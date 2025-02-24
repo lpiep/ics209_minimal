@@ -16,7 +16,8 @@ previously appeared in the API export.
 
 * "ics_id": ID found in original data set ("INCIDENT_NUMBER")
 * "ics_wildfire_ignition_date": Start date or first report date of fire
-* "ics_wildfire_fatalities": Number of Fatalities (civilian-only when available)
+* "ics_wildfire_fatalities_tot": Number of Fatalities (civilian & responder)
+* "ics_wildfire_fatalities_civ": Number of Fatalities (civilian)
 * "ics_name": Fire name
 * "ics_wildfire_area": Fire burn area, in square kilometers
 * "ics_wildfire_struct_destroyed": Number of structures destroyed
