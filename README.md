@@ -12,21 +12,26 @@ keep the final data up-to-date.
 previously appeared in the API export. 
 * `data/historical/historical_cleaned.parquet`: Data extracted from historical archives. Not expected to change.
 
-### Format
+### Variables
 
-* "ics_id": ID found in original data set ("INCIDENT_NUMBER")
-* "ics_wildfire_ignition_date": Start date or first report date of fire
-* "ics_wildfire_fatalities_tot": Number of Fatalities (civilian & responder)
-* "ics_wildfire_fatalities_civ": Number of Fatalities (civilian)
-* "ics_name": Fire name
-* "ics_wildfire_area": Fire burn area, in square kilometers
-* "ics_wildfire_struct_destroyed": Number of structures destroyed
-* "ics_wildfire_poo_lat": Latitude of Point of Origin in decimal degrees
-* "ics_wildfire_poo_lon": Latitude of Point of Origin in decimal degrees         
-* "ics_state": Point of origin USPS state abbreviation (either sic. or derived from FIPS code)
-* "ics_county": Point of origin county (either sic. or derived from FIPS code)
-* "ics_complex": Whether row represents a complex
-* "ics_irwin_id": IRWIN ID when available
+The output data set draws from different variables depending on the year of the original data. 
+
+| Output Variable | Description | 1999-2002 | 2003-2013 | 2013-2023 | 2024+ |
+| --- | --- | --- | --- | --- | --- |
+| `ics_state` |  US State in which fire occurred | `UN_USTATE` | `UN_USTATE` | `POO_STATE_CODE` | `STATE` |
+| `ics_county` |  US County in which fire occurred | `COUNTY` | `COUNTY` | `POO_COUNTY_CODE` | `POO_COUNTY` |
+| `ics_wildfire_area` |  Burned area in square kilometers | `ACRES` | `AREA` & `AREA_MEASUREMENT` | `CURR_INCIDENT_AREA` | `DISP_INC_AREA` |
+| `ics_complex` | Whether fire is a complex of multiple member fires | -- | `COMPLEX` | `SINGLE_COMPLEX_FLAG` | `COMPLEX_FLAG` |
+| `ics_name` |  Fire name | `ENAME` | `INCIDENT_NAME` | `INCIDENT_NAME` | `INCIDENT_NAME` |
+| `ics_wildfire_fatalities_civ` | Number of civilian fatalities | -- | -- | `QTY_TO_DATE` | -- |
+| `ics_wildfire_fatalities_tot` | Number of total fatalities | -- | -- | `QTY_TO_DATE` | -- |
+| `ics_wildfire_struct_destroyed` | Number of structures destroyed | `DCOUNT` | `DESTROYED` | `QTY_DESTROYED` | `STRUCTURES_DESTROYED_COUNT` |
+| `ics_wildfire_ignition_date` | Date of fire ignition | `STARTDATE` | `START_DATE` | `DISCOVERY_DATE` | `DISCOVERY_DATE` |
+| `ics_wildfire_poo_lat` | Fire point of origin latitude | `LATDEG` & `LATMIN` | `LATITUDE` | `POO_LATITUDE` | `POO_LATITUDE` |
+| `ics_wildfire_poo_lon` | Fire point of origin longitude | `LONGDEG` & `LONGMIN` | `LONGITUDE` | `POO_LONGITUDE` | `POO_LONGITUDE` |
+| `ics_id` | Native ID of associated ICS/209 data, if applicable | `INCIDENT_NUMBER` | `INCIDENT_NUMBER` | `INCIDENT_NUMBER` | `INCIDENT_NUMBER` |
+| `ics_irwin_id` |  | -- | -- | `IRWIN_IDENTIFIER` | -- |
+
 
 
 ## Current
@@ -74,7 +79,7 @@ Next, parse_historical extracts data for each of the three historical data forma
 
 ### Known Issues
 
-* 1999-2001 did not contain fatality data
+* 1999-2001 did not contain fatality data,
 * 2021 did not include the main file used to join each table to the primary fire information. No fires from this year were
 included (though a couple with a start date in 2021 were included in the 2022 data set). 
 
