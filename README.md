@@ -24,7 +24,7 @@ The output data set draws from different variables depending on the year of the 
 | `ics_complex` | Whether fire is a complex of multiple member fires | -- | `COMPLEX` | `SINGLE_COMPLEX_FLAG` | `COMPLEX_FLAG` |
 | `ics_name` |  Fire name | `ENAME` | `INCIDENT_NAME` | `INCIDENT_NAME` | `INCIDENT_NAME` |
 | `ics_wildfire_fatalities_civ` | Number of civilian fatalities | -- | -- | `QTY_TO_DATE` | -- |
-| `ics_wildfire_fatalities_tot` | Number of total fatalities | -- | -- | `QTY_TO_DATE` | -- |
+| `ics_wildfire_fatalities_tot` | Number of total fatalities | `FATALITIES` | `FATALITIES` | `QTY_TO_DATE` | `FATALITIES` |
 | `ics_wildfire_struct_destroyed` | Number of structures destroyed | `DCOUNT` | `DESTROYED` | `QTY_DESTROYED` | `STRUCTURES_DESTROYED_COUNT` |
 | `ics_wildfire_ignition_date` | Date of fire ignition | `STARTDATE` | `START_DATE` | `DISCOVERY_DATE` | `DISCOVERY_DATE` |
 | `ics_wildfire_poo_lat` | Fire point of origin latitude | `LATDEG` & `LATMIN` | `LATITUDE` | `POO_LATITUDE` | `POO_LATITUDE` |
