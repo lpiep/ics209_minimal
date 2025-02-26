@@ -79,9 +79,8 @@ Next, parse_historical extracts data for each of the three historical data forma
 
 ### Known Issues
 
-* 1999-2001 did not contain fatality data,
-* 2021 did not include the main file used to join each table to the primary fire information. No fires from this year were
-included (though a couple with a start date in 2021 were included in the 2022 data set). 
-
+* 1999-2001 did not contain fatality data, and only 2013 - 2023 break out civlian fatalities
+* The Access DB for 2021 did not include the main file used to join each table to the primary fire information. USFS-IT 
+provided this file directly, and it is included in the final data set and archived raw files here. 
 
 

@@ -4,7 +4,7 @@
 
 library(arrow)
 library(tidyverse)
-
+library(fs)
 
 # 1999 to 2002
 dat <- map(dir_ls('data/historical/extracts/', recurse = TRUE, regexp = '(1999|2000|2001|2002)/.*parquet'), read_parquet)
