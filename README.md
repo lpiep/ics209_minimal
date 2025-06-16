@@ -16,7 +16,7 @@ previously appeared in the API export.
 
 The output data set draws from different variables depending on the year of the original data. 
 
-| Output Variable | Description | 1999-2002 | 2003-2013 | 2013-2023 | 2024+ |
+| Output Variable | Description | 1999-2002 | 2003-2013 | 2013-2024 | 2025+ |
 | --- | --- | --- | --- | --- | --- |
 | `ics_state` |  US State in which fire occurred | `UN_USTATE` | `UN_USTATE` | `POO_STATE_CODE` | `STATE` |
 | `ics_county` |  US County in which fire occurred | `COUNTY` | `COUNTY` | `POO_COUNTY_CODE` | `POO_COUNTY` |
