@@ -49,9 +49,12 @@ curr_data_cleaned <- curr_data %>%
     ics_id = INCIDENT_NUMBER,
     ics_wildfire_ignition_date =  mdy(DISCOVERY_DATE),
     ics_wildfire_fatalities_tot = FATALITIES, 
+    ics_wildfire_injuries_tot = INJURIES_TO_DATE, 
     ics_name = INCIDENT_NAME,
     ics_wildfire_area = as.numeric(DISP_INC_AREA) * 0.00404686, # convert to km^2
     ics_wildfire_struct_destroyed = STRUCTURES_DESTROYED_COUNT,
+    ics_wildfire_struct_threatened = STRUCTURES_THREATENED_COUNT,
+    ics_wildfire_cost = PROJECTED_FINAL_IM_COST,
     ics_wildfire_poo_lat = parse_lat_long(curr_data$POO_LATITUDE),
     ics_wildfire_poo_lon = parse_lat_long(curr_data$POO_LONGITUDE),
     ics_state = STATE,

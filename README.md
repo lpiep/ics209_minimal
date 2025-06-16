@@ -24,8 +24,12 @@ The output data set draws from different variables depending on the year of the 
 | `ics_complex` | Whether fire is a complex of multiple member fires | -- | `COMPLEX` | `SINGLE_COMPLEX_FLAG` | `COMPLEX_FLAG` |
 | `ics_name` |  Fire name | `ENAME` | `INCIDENT_NAME` | `INCIDENT_NAME` | `INCIDENT_NAME` |
 | `ics_wildfire_fatalities_civ` | Number of civilian fatalities | -- | -- | `QTY_TO_DATE` | -- |
-| `ics_wildfire_fatalities_tot` | Number of total fatalities | `FATALITIES` | `FATALITIES` | `QTY_TO_DATE` | `FATALITIES` |
+| `ics_wildfire_fatalities_tot` | Number of total fatalities | `FATALITIES` | `FATALITIES` | `QTY_TO_DATE` | `CIT_IDENTIFIER` |
+| *** `ics_wildfire_injuries` | Number of civilian/public injuries or illnesses | `INJURIES` (2001, 2002 only) | `INJURIES_TO_DATE` |  | `INJURIES_TO_DATE` |
+| *** `ics_wildfire_evacuated` | Number of people evacuated |  |  |  | -- |
 | `ics_wildfire_struct_destroyed` | Number of structures destroyed | `DCOUNT` | `DESTROYED` | `QTY_DESTROYED` | `STRUCTURES_DESTROYED_COUNT` |
+| *** `ics_wildfire_struct_threatened` | Number of structures threatened |  |  |  | `STRUCTURES_THREATENED_COUNT` |
+| *** `ics_wildfire_cost` | Estimated final cost of response |  |  |  | `PROJECTED_FINAL_IM_COST` |
 | `ics_wildfire_ignition_date` | Date of fire ignition | `STARTDATE` | `START_DATE` | `DISCOVERY_DATE` | `DISCOVERY_DATE` |
 | `ics_wildfire_poo_lat` | Fire point of origin latitude | `LATDEG` & `LATMIN` | `LATITUDE` | `POO_LATITUDE` | `POO_LATITUDE` |
 | `ics_wildfire_poo_lon` | Fire point of origin longitude | `LONGDEG` & `LONGMIN` | `LONGITUDE` | `POO_LONGITUDE` | `POO_LONGITUDE` |
@@ -83,4 +87,6 @@ Next, parse_historical extracts data for each of the three historical data forma
 * The Access DB for 2021 did not include the main file used to join each table to the primary fire information. USFS-IT 
 provided this file directly, and it is included in the final data set and archived raw files here. 
 
+### Reference
 
+https://training.fema.gov/emiweb/is/icsresource/assets/ics%20forms/ics%20form%20209,%20incident%20status%20summary%20(v3).pdf

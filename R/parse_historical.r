@@ -35,7 +35,7 @@ dat_99_02 <- list(
   
   incidents = dat %>% 
     keep_at(~ str_detect(.x, 'IMSR_IMSR_209_INCIDENTS.parquet')) %>% 
-    map(select, c(INCIDENT_NUMBER, FATALITIES, REPORT_DATE, COUNTY)) %>%
+    map(select, c(INCIDENT_NUMBER, FATALITIES, INJURIES, REPORT_DATE, COUNTY, EST_FINAL_COSTS)) %>%
     bind_rows() %>% 
     group_by(INCIDENT_NUMBER) %>% 
     arrange(REPORT_DATE) %>% 
@@ -51,6 +51,7 @@ dat_99_02 <- list(
     ics_id = INCIDENT_NUMBER,
     ics_wildfire_ignition_date = as_date(mdy_hms(STARTDATE, quiet = TRUE)),
     ics_wildfire_fatalities_tot = FATALITIES,
+    ics_wildfire_injuries_tot = INJURIES,
     ics_name = ENAME,
     ics_wildfire_area = ACRES * 0.00404686,
     ics_wildfire_struct_destroyed = DCOUNT,
@@ -58,6 +59,7 @@ dat_99_02 <- list(
     ics_wildfire_poo_lon = -abs(LONGDEG) - (LONGMIN/60), # assume positive longs are shorthand for negative
     ics_state = UN_USTATE,
     ics_county = COUNTY,
+    ics_wildfire_cost = EST_FINAL_COSTS,
     ics_complex = NA # not found
   ) %>%
   distinct() %>%
@@ -72,8 +74,8 @@ dat_02_13 <- list(
     keep_at(~ str_detect(.x, 'IMSR_IMSR_209_INCIDENTS(_T)?.parquet')) %>% 
     map(
       select, 
-      any_of(c('INCIDENT_NUMBER', 'FATALITIES', 'START_DATE', 'INCIDENT_NAME', 'AREA', 
-               'AREA_MEASUREMENT', 'LATITUDE', 'LONGITUDE', 'REPORT_DATE', 'UN_USTATE', 
+      any_of(c('INCIDENT_NUMBER', 'FATALITIES', 'INJURIES_TO_DATE', 'START_DATE', 'INCIDENT_NAME', 'AREA', 
+               'AREA_MEASUREMENT', 'LATITUDE', 'LONGITUDE', 'REPORT_DATE', 'UN_USTATE', 'EST_FINAL_COSTS', 
                'COUNTY', 'COMPLEX'))
     ) %>% 
     bind_rows() %>% 
@@ -100,6 +102,7 @@ dat_02_13 <- list(
     ics_id = INCIDENT_NUMBER,
     ics_wildfire_ignition_date = as_date(mdy_hms(START_DATE, quiet = TRUE)),
     ics_wildfire_fatalities_tot = FATALITIES,
+    ics_wildfire_injuries_tot = INJURIES_TO_DATE,
     ics_name = INCIDENT_NAME,
     ics_wildfire_area = case_when(
       AREA_MEASUREMENT == 'ACRES' ~ AREA * 0.00404686,
@@ -116,7 +119,8 @@ dat_02_13 <- list(
     ics_complex = case_when(
       COMPLEX == 'Y' ~ TRUE,
       COMPLEX == 'N' ~ FALSE
-    )
+    ),
+    ics_wildfire_cost = EST_FINAL_COSTS
   ) %>%
   distinct() %>%   
   filter(ics_wildfire_ignition_date < ymd('2014-01-01')) # remove dates in the future
@@ -129,13 +133,26 @@ fips_codes_counties <- fips_codes %>% select(-state_name, -state) %>% distinct()
 
 dat <- map(dir_ls('data/historical/extracts/', recurse = TRUE, regexp = '(202[0-9]|201[3-9])/.*parquet'), read_parquet)
 
-# Need to extract the code for fatalities since it is different for every year!
+# Need to extract the code for casualties/evacs/fatalities since it is different for every year!
 fatality_code <- dat %>%
   keep_at(~ str_detect(.x, 'SIT209_HISTORY_SIT209_LOOKUP_CODES.parquet')) %>%
   map(filter, CODE_TYPE == 'CASUALTY_ILLNESS_TYPE' & CODE_NAME == 'Fatalities') %>% 
   map(select, 'LUCODES_IDENTIFIER') %>%
   bind_rows(.id = 'data_year') %>%
   mutate(data_year = str_extract(data_year, '(?<=data/historical/extracts/)[0-9]{4}'))
+injury_code <- dat %>%
+  keep_at(~ str_detect(.x, 'SIT209_HISTORY_SIT209_LOOKUP_CODES.parquet')) %>%
+  map(filter, CODE_TYPE == 'CASUALTY_ILLNESS_TYPE' & CODE_NAME == 'With Injuries/Illness') %>% 
+  map(select, 'LUCODES_IDENTIFIER') %>%
+  bind_rows(.id = 'data_year') %>%
+  mutate(data_year = str_extract(data_year, '(?<=data/historical/extracts/)[0-9]{4}'))
+evac_code <- dat %>%
+  keep_at(~ str_detect(.x, 'SIT209_HISTORY_SIT209_LOOKUP_CODES.parquet')) %>%
+  map(filter, CODE_TYPE == 'CASUALTY_ILLNESS_TYPE' & CODE_NAME == 'Evacuated') %>% 
+  map(select, 'LUCODES_IDENTIFIER') %>%
+  bind_rows(.id = 'data_year') %>%
+  mutate(data_year = str_extract(data_year, '(?<=data/historical/extracts/)[0-9]{4}'))
+
 
 # Get INCIDENT_NUMBER <-> IRWINID
 irwin_xwalk = dat %>%
@@ -169,7 +186,8 @@ dat_13_plus <- list(
         POO_STATE_CODE,
         POO_COUNTY_CODE,
         SINGLE_COMPLEX_FLAG,
-        LAST_MODIFIED_DATE)#,
+        LAST_MODIFIED_DATE,
+        PROJECTED_FINAL_IM_COST)#,
         #IRWIN_IDENTIFIER)
     ) %>% 
     map(
@@ -206,8 +224,40 @@ dat_13_plus <- list(
     #arrange(QTY_TO_DATE) %>% 
     #slice_tail(n=1) %>%
     summarize(
-      QTY_TO_DATE_PUBLIC = max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'P')),
-      QTY_TO_DATE_TOT = max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'P')) + max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'R'))
+      FATAL_QTY_TO_DATE_PUBLIC = max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'P')),
+      FATAL_QTY_TO_DATE_TOT = max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'P')) + max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'R'))
+    ) %>% 
+    ungroup(),
+  
+  incident_injuries = dat %>% 
+    keep_at(~ str_detect(.x, 'SIT209_HISTORY_INCIDENT_209_CSLTY_ILLNESSES.parquet')) %>% 
+    map(select, c(INC209R_IDENTIFIER, CIT_IDENTIFIER, RESPONDER_PUBLIC_FLAG, QTY_TO_DATE)) %>%
+    bind_rows(.id = 'data_year') %>%
+    mutate(data_year = str_extract(data_year, '(?<=data/historical/extracts/)[0-9]{4}')) %>%
+    left_join(injury_code, by = 'data_year') %>% 
+    filter(CIT_IDENTIFIER == LUCODES_IDENTIFIER) %>%#  & RESPONDER_PUBLIC_FLAG == 'P') %>% # public deaths
+    group_by(INC209R_IDENTIFIER) %>% 
+    #arrange(QTY_TO_DATE) %>% 
+    #slice_tail(n=1) %>%
+    summarize(
+      INJ_QTY_TO_DATE_PUBLIC = max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'P')),
+      INJ_QTY_TO_DATE_TOT = max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'P')) + max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'R'))
+    ) %>% 
+    ungroup(),
+  
+  incident_evacs = dat %>% 
+    keep_at(~ str_detect(.x, 'SIT209_HISTORY_INCIDENT_209_CSLTY_ILLNESSES.parquet')) %>% 
+    map(select, c(INC209R_IDENTIFIER, CIT_IDENTIFIER, RESPONDER_PUBLIC_FLAG, QTY_TO_DATE)) %>%
+    bind_rows(.id = 'data_year') %>%
+    mutate(data_year = str_extract(data_year, '(?<=data/historical/extracts/)[0-9]{4}')) %>%
+    left_join(evac_code, by = 'data_year') %>% 
+    filter(CIT_IDENTIFIER == LUCODES_IDENTIFIER) %>%#  & RESPONDER_PUBLIC_FLAG == 'P') %>% # public deaths
+    group_by(INC209R_IDENTIFIER) %>% 
+    #arrange(QTY_TO_DATE) %>% 
+    #slice_tail(n=1) %>%
+    summarize(
+      EVAC_QTY_TO_DATE_PUBLIC = max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'P')),
+      EVAC_QTY_TO_DATE_TOT = max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'P')) + max(QTY_TO_DATE * (RESPONDER_PUBLIC_FLAG == 'R'))
     ) %>% 
     ungroup() 
 ) %>%
@@ -217,11 +267,14 @@ dat_13_plus <- list(
   left_join(irwin_xwalk, by = 'INCIDENT_NUMBER') %>% 
   transmute(
     ics_id = INCIDENT_NUMBER,
-    #ics_irwin_id = IRWIN_IDENTIFIER,
+    ics_irwin_id = IRWIN_IDENTIFIER,
     ics_wildfire_ignition_date = as_date(mdy_hms(DISCOVERY_DATE, quiet = TRUE)),
-    ics_wildfire_fatalities_tot = QTY_TO_DATE_TOT,
-    ics_wildfire_fatalities_civ = QTY_TO_DATE_PUBLIC,
-    ics_name = INCIDENT_NAME,
+    ics_wildfire_fatalities_tot = FATAL_QTY_TO_DATE_TOT,
+    ics_wildfire_fatalities_civ = FATAL_QTY_TO_DATE_PUBLIC,
+    ics_wildfire_injuries_tot = INJ_QTY_TO_DATE_TOT,
+    ics_wildfire_injuries_civ = INJ_QTY_TO_DATE_PUBLIC, 
+    ics_wildfire_evacuation_tot = EVAC_QTY_TO_DATE_TOT,
+    ics_wildfire_evacuation_civ = EVAC_QTY_TO_DATE_PUBLIC, 
     ics_wildfire_area = CURR_INCIDENT_AREA * 0.00404686, # acres to km2
     ics_wildfire_struct_destroyed = QTY_DESTROYED,
     ics_wildfire_poo_lat = POO_LATITUDE,
@@ -232,10 +285,10 @@ dat_13_plus <- list(
       SINGLE_COMPLEX_FLAG == 'C' ~ TRUE,
       SINGLE_COMPLEX_FLAG == 'S' ~ FALSE
     ),
-    ics_irwin_id = IRWIN_IDENTIFIER
+    ics_wildfire_cost = PROJECTED_FINAL_IM_COST
   ) %>%
   distinct() %>%   
-  filter(ics_wildfire_ignition_date < ymd('2025-01-01')) # remove dates in the future
+  filter(ics_wildfire_ignition_date < floor_date(today(), 'years')) # remove dates in the future
 
 # Join and Clean 
 
