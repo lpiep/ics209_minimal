@@ -25,7 +25,7 @@ dat_99_02 <- list(
 
   incident_structures = dat %>% 
     keep_at(~ str_detect(.x, 'IMSR_INCIDENT_STRUCTURES.parquet')) %>% 
-    map(select, c(II_EVENT_ID, DCOUNT, II_REPDATE)) %>%
+    map(select, c(II_EVENT_ID, DCOUNT, TCOUNT, II_REPDATE)) %>%
     bind_rows() %>%
     rename(INCIDENT_NUMBER = II_EVENT_ID) %>% 
     group_by(INCIDENT_NUMBER) %>% 
@@ -55,6 +55,7 @@ dat_99_02 <- list(
     ics_name = ENAME,
     ics_wildfire_area = ACRES * 0.00404686,
     ics_wildfire_struct_destroyed = DCOUNT,
+    ics_wildfire_struct_threatened = TCOUNT,
     ics_wildfire_poo_lat = LATDEG + LATMIN/60,
     ics_wildfire_poo_lon = -abs(LONGDEG) - (LONGMIN/60), # assume positive longs are shorthand for negative
     ics_state = UN_USTATE,
@@ -87,7 +88,7 @@ dat_02_13 <- list(
   
   incident_structures = dat %>% 
     keep_at(~ str_detect(.x, 'IMSR_IMSR_209_INCIDENT_STRUCTURES.parquet')) %>% 
-    map(select, c(IM_INCIDENT_NUMBER, IM_REPORT_DATE, DESTROYED)) %>%
+    map(select, c(IM_INCIDENT_NUMBER, IM_REPORT_DATE, DESTROYED, THREATENED)) %>%
     bind_rows() %>%
     rename(INCIDENT_NUMBER = IM_INCIDENT_NUMBER) %>%
     group_by(INCIDENT_NUMBER) %>% 
@@ -112,6 +113,7 @@ dat_02_13 <- list(
       TRUE ~ NA_real_
     ),
     ics_wildfire_struct_destroyed = DESTROYED,
+    ics_wildfire_struct_threatened = THREATENED,
     ics_wildfire_poo_lat = LATITUDE,
     ics_wildfire_poo_lon = -abs(LONGITUDE), # assume positive longs are shorthand for negative
     ics_state = UN_USTATE,
@@ -205,7 +207,7 @@ dat_13_plus <- list(
   
   incident_structures = dat %>% 
     keep_at(~ str_detect(.x, 'SIT209_HISTORY_INCIDENT_209_AFFECTED_STRUCTS.parquet')) %>% 
-    map(select, c(INC209R_IDENTIFIER, QTY_DESTROYED)) %>%
+    map(select, c(INC209R_IDENTIFIER, QTY_DESTROYED, QTY_THREATENED_72)) %>%
     bind_rows() %>%
     filter(!is.na(QTY_DESTROYED)) %>% 
     group_by(INC209R_IDENTIFIER) %>% 
@@ -277,6 +279,7 @@ dat_13_plus <- list(
     ics_wildfire_evacuation_civ = EVAC_QTY_TO_DATE_PUBLIC, 
     ics_wildfire_area = CURR_INCIDENT_AREA * 0.00404686, # acres to km2
     ics_wildfire_struct_destroyed = QTY_DESTROYED,
+    ics_wildfire_struct_threatened = QTY_THREATENED_72,
     ics_wildfire_poo_lat = POO_LATITUDE,
     ics_wildfire_poo_lon = -abs(POO_LONGITUDE), # assume positive longs are shorthand for negative
     ics_state = state,

@@ -18,17 +18,26 @@ dat <- bind_rows(
 Summarize some stats by year to see if we have any glaring issues from the varying
 file formats over time. 
 
-```{r, echo = FALSE, warning = FALSE, message = FALSE}
+Known issues:
+
+* the following are not available before 2014:
+  * evacuations
+  * civilian fatalities
+  * civilian injuries
+* the codes used to identify fatalities, injuries, and evacuations were not available in 
+the 2016 data set
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.height=10}
 dat %>% 
   group_by(year = year(ics_wildfire_ignition_date)) %>%
-  select(ics_wildfire_fatalities, ics_wildfire_area, ics_wildfire_struct_destroyed) %>% 
+  select(ics_wildfire_fatalities_civ, ics_wildfire_fatalities_tot, ics_wildfire_area, ics_wildfire_struct_destroyed, ics_wildfire_struct_threatened, ics_wildfire_cost, ics_wildfire_evacuation_tot, ics_wildfire_evacuation_civ, ics_wildfire_injuries_tot, ics_wildfire_injuries_civ) %>% 
   pivot_longer(-year) %>%
   ggplot() + 
     geom_boxplot(aes(x=year, y=value, group = year)) + 
-    geom_vline(xintercept = c(2000.5, 2012.5), color = 'red', linetype = 'dashed') + 
-    geom_rect(xmin = 2020.5, xmax = 2021.5, ymin = -Inf, ymax = Inf, fill = 'red', alpha = .25, linetype = 'dashed') + 
+    geom_vline(xintercept = c(2000.5, 2013.5, 2023.5), color = 'red', linetype = 'dashed') + 
+    #geom_rect(xmin = 2020.5, xmax = 2021.5, ymin = -Inf, ymax = Inf, fill = 'red', alpha = .25, linetype = 'dashed') +
     facet_wrap(~name, ncol = 1, scale = 'free_y') + 
-    scale_y_continuous(transform = 'log')
+    scale_y_continuous(transform = 'log', labels = ~ round(.x)) + 
+    scale_x_continuous(breaks = 1999:year(today()))
 ```
 
-2021 is missing the main report table that links all these, so all but two fires are missing. 
