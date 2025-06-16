@@ -23,13 +23,15 @@ The output data set draws from different variables depending on the year of the 
 | `ics_wildfire_area` |  Burned area in square kilometers | `ACRES` | `AREA` & `AREA_MEASUREMENT` | `CURR_INCIDENT_AREA` | `DISP_INC_AREA` |
 | `ics_complex` | Whether fire is a complex of multiple member fires | -- | `COMPLEX` | `SINGLE_COMPLEX_FLAG` | `COMPLEX_FLAG` |
 | `ics_name` |  Fire name | `ENAME` | `INCIDENT_NAME` | `INCIDENT_NAME` | `INCIDENT_NAME` |
-| `ics_wildfire_fatalities_civ` | Number of civilian fatalities | -- | -- | `QTY_TO_DATE` | -- |
-| `ics_wildfire_fatalities_tot` | Number of total fatalities | `FATALITIES` | `FATALITIES` | `QTY_TO_DATE` | `CIT_IDENTIFIER` |
-| *** `ics_wildfire_injuries` | Number of civilian/public injuries or illnesses | `INJURIES` (2001, 2002 only) | `INJURIES_TO_DATE` |  | `INJURIES_TO_DATE` |
-| *** `ics_wildfire_evacuated` | Number of people evacuated |  |  |  | -- |
+| `ics_wildfire_fatalities_civ` | Number of civilian fatalities | -- | -- | `QTY_TO_DATE` & `CIT_IDENTIFIER`  | -- |
+| `ics_wildfire_fatalities_tot` | Number of total fatalities | `FATALITIES` | `FATALITIES` | `QTY_TO_DATE` & `CIT_IDENTIFIER` | `FATALITIES` |
+| `ics_wildfire_injuries_civ` | Number of civilian injuries or illnesses | -- | -- | `QTY_TO_DATE` & `CIT_IDENTIFIER`  | -- |
+| `ics_wildfire_injuries_tot` | Number of total injuries or illnesses | `INJURIES` (2001, 2002 only) | `INJURIES_TO_DATE` | `QTY_TO_DATE` & `CIT_IDENTIFIER` | `INJURIES_TO_DATE` & `INJURIES_THIS_REP_PERIOD`|
+| `ics_wildfire_evacuated_civ` | Number of people evacuated | -- | -- | `QTY_TO_DATE` & `CIT_IDENTIFIER` | -- |
+| `ics_wildfire_evacuated_tot` | Number of people evacuated | -- | -- | `QTY_TO_DATE` & `CIT_IDENTIFIER` | -- |
 | `ics_wildfire_struct_destroyed` | Number of structures destroyed | `DCOUNT` | `DESTROYED` | `QTY_DESTROYED` | `STRUCTURES_DESTROYED_COUNT` |
-| *** `ics_wildfire_struct_threatened` | Number of structures threatened |  |  |  | `STRUCTURES_THREATENED_COUNT` |
-| *** `ics_wildfire_cost` | Estimated final cost of response |  |  |  | `PROJECTED_FINAL_IM_COST` |
+| `ics_wildfire_struct_threatened` | Number of structures threatened | `TCOUNT` | `THREATENED` | `QTY_THREATENED` | `STRUCTURES_THREATENED_COUNT` |
+| *** `ics_wildfire_cost` | Estimated final cost of response | `EST_FINAL_COSTS` | `EST_FINAL_COSTS` | `PROJECTED_FINAL_IM_COST` | `PROJECTED_FINAL_IM_COST` |
 | `ics_wildfire_ignition_date` | Date of fire ignition | `STARTDATE` | `START_DATE` | `DISCOVERY_DATE` | `DISCOVERY_DATE` |
 | `ics_wildfire_poo_lat` | Fire point of origin latitude | `LATDEG` & `LATMIN` | `LATITUDE` | `POO_LATITUDE` | `POO_LATITUDE` |
 | `ics_wildfire_poo_lon` | Fire point of origin longitude | `LONGDEG` & `LONGMIN` | `LONGITUDE` | `POO_LONGITUDE` | `POO_LONGITUDE` |
