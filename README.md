@@ -85,7 +85,12 @@ Next, parse_historical extracts data for each of the three historical data forma
 
 ### Known Issues
 
-* 1999-2001 did not contain fatality data, and only 2013 - 2023 break out civlian fatalities
+* 1999-2001 did not contain fatality data
+* The following are not available before 2014:
+       * evacuations
+       * civilian fatalities
+       * civilian injuries
+* The linking code used to identify fatalities, injuries, and evacuations were not available in the 2016 data set
 * The Access DB for 2021 did not include the main file used to join each table to the primary fire information. USFS-IT 
 provided this file directly, and it is included in the final data set and archived raw files here. 
 
