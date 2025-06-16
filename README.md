@@ -31,7 +31,7 @@ The output data set draws from different variables depending on the year of the 
 | `ics_wildfire_evacuated_tot` | Number of people evacuated | -- | -- | `QTY_TO_DATE` & `CIT_IDENTIFIER` | -- |
 | `ics_wildfire_struct_destroyed` | Number of structures destroyed | `DCOUNT` | `DESTROYED` | `QTY_DESTROYED` | `STRUCTURES_DESTROYED_COUNT` |
 | `ics_wildfire_struct_threatened` | Number of structures threatened | `TCOUNT` | `THREATENED` | `QTY_THREATENED` | `STRUCTURES_THREATENED_COUNT` |
-| *** `ics_wildfire_cost` | Estimated final cost of response | `EST_FINAL_COSTS` | `EST_FINAL_COSTS` | `PROJECTED_FINAL_IM_COST` | `PROJECTED_FINAL_IM_COST` |
+| `ics_wildfire_cost` | Estimated final cost of response | `EST_FINAL_COSTS` | `EST_FINAL_COSTS` | `PROJECTED_FINAL_IM_COST` | `PROJECTED_FINAL_IM_COST` |
 | `ics_wildfire_ignition_date` | Date of fire ignition | `STARTDATE` | `START_DATE` | `DISCOVERY_DATE` | `DISCOVERY_DATE` |
 | `ics_wildfire_poo_lat` | Fire point of origin latitude | `LATDEG` & `LATMIN` | `LATITUDE` | `POO_LATITUDE` | `POO_LATITUDE` |
 | `ics_wildfire_poo_lon` | Fire point of origin longitude | `LONGDEG` & `LONGMIN` | `LONGITUDE` | `POO_LONGITUDE` | `POO_LONGITUDE` |
