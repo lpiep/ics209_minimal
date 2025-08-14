@@ -16,7 +16,7 @@ previously appeared in the API export.
 
 The output data set draws from different variables depending on the year of the original data. 
 
-| Output Variable | Description | 1999-2002 | 2003-2013 | 2013-2024 | 2025+ |
+| Output Variable | Description | 1999-2002 | 2003-2013 | 2013-2024 | 2025+ (current_cleaned.parquet) |
 | --- | --- | --- | --- | --- | --- |
 | `ics_state` |  US State in which fire occurred | `UN_USTATE` | `UN_USTATE` | `POO_STATE_CODE` | `STATE` |
 | `ics_county` |  US County in which fire occurred | `COUNTY` | `COUNTY` | `POO_COUNTY_CODE` | `POO_COUNTY` |
@@ -35,7 +35,7 @@ The output data set draws from different variables depending on the year of the 
 | `ics_wildfire_ignition_date` | Date of fire ignition | `STARTDATE` | `START_DATE` | `DISCOVERY_DATE` | `DISCOVERY_DATE` |
 | `ics_wildfire_poo_lat` | Fire point of origin latitude | `LATDEG` & `LATMIN` | `LATITUDE` | `POO_LATITUDE` | `POO_LATITUDE` |
 | `ics_wildfire_poo_lon` | Fire point of origin longitude | `LONGDEG` & `LONGMIN` | `LONGITUDE` | `POO_LONGITUDE` | `POO_LONGITUDE` |
-| `ics_id` | Native ID of associated ICS/209 data, if applicable | `INCIDENT_NUMBER` | `INCIDENT_NUMBER` | `INCIDENT_NUMBER` | `INCIDENT_NUMBER` |
+| `ics_id` | Year of Start date , Native ID of associated ICS/209 data, Incident Name (separated by '_') | `INCIDENT_NUMBER` & `STARTDATE` &  `ENAME` | `INCIDENT_NUMBER` & `START_DATE` & `INCIDENT_NAME` | `INCIDENT_NUMBER` & `DISCOVERY_DATE` & `INCIDENT_NAME`  |  `INCIDENT_NUMBER` & `DISCOVERY_DATE` & `INCIDENT_NAME` |
 | `ics_irwin_id` |  | -- | -- | `IRWIN_IDENTIFIER` | -- |
 
 
