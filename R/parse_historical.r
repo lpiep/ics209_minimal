@@ -290,6 +290,7 @@ dat_13_plus <- list(
     ics_id = INCIDENT_ID,
     ics_irwin_id = IRWIN_IDENTIFIER,
     ics_wildfire_ignition_date = as_date(mdy_hms(DISCOVERY_DATE, quiet = TRUE)),
+    ics_name = INCIDENT_NAME,
     ics_wildfire_fatalities_tot = FATAL_QTY_TO_DATE_TOT,
     ics_wildfire_fatalities_civ = FATAL_QTY_TO_DATE_PUBLIC,
     ics_wildfire_injuries_tot = INJ_QTY_TO_DATE_TOT,
