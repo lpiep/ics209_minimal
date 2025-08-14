@@ -18,37 +18,50 @@ dat_99_02 <- list(
     map(select, c(EVENT_ID, STARTDATE, ENAME, ACRES, LATDEG, LATMIN, LONGDEG, LONGMIN, REPDATE, UN_USTATE)) %>% 
     bind_rows() %>%
     rename(INCIDENT_NUMBER = EVENT_ID) %>%
-    group_by(INCIDENT_NUMBER) %>% 
+    mutate(INCIDENT_ID = paste(year(mdy_hms(STARTDATE)), str_trim(INCIDENT_NUMBER), str_trim(toupper(ENAME)), sep = '_')) %>% 
+    group_by(INCIDENT_ID) %>% 
     arrange(REPDATE) %>% 
     slice_tail(n=1) %>% 
     ungroup(),
 
   incident_structures = dat %>% 
     keep_at(~ str_detect(.x, 'IMSR_INCIDENT_STRUCTURES.parquet')) %>% 
-    map(select, c(II_EVENT_ID, DCOUNT, TCOUNT, II_REPDATE)) %>%
+    map(select, c(II_EVENT_ID, II_REPDATE, DCOUNT, TCOUNT)) %>%
     bind_rows() %>%
     rename(INCIDENT_NUMBER = II_EVENT_ID) %>% 
-    group_by(INCIDENT_NUMBER) %>% 
-    arrange(II_REPDATE) %>% 
-    slice_tail(n=1) %>%
-    ungroup(),
+    rename(REPDATE = II_REPDATE) %>%
+    group_by(INCIDENT_NUMBER, REPDATE) %>%
+    summarize(
+      DCOUNT = ifelse(all(is.na(DCOUNT)), NA, max(DCOUNT, na.rm = TRUE)),
+      TCOUNT = ifelse(all(is.na(TCOUNT)), NA, max(TCOUNT, na.rm = TRUE)),
+      .groups = 'drop'
+    ),
   
   incidents = dat %>% 
     keep_at(~ str_detect(.x, 'IMSR_IMSR_209_INCIDENTS.parquet')) %>% 
-    map(select, c(INCIDENT_NUMBER, FATALITIES, INJURIES, REPORT_DATE, COUNTY, EST_FINAL_COSTS)) %>%
-    bind_rows() %>% 
-    group_by(INCIDENT_NUMBER) %>% 
-    arrange(REPORT_DATE) %>% 
-    slice_tail(n=1) %>%
-    ungroup()
-) %>%
-  reduce(full_join, by = 'INCIDENT_NUMBER') %>%
+    map(select, c(INCIDENT_NUMBER, REPORT_DATE, FATALITIES, INJURIES, COUNTY, EST_FINAL_COSTS)) %>%
+    bind_rows() %>%
+    rename(REPDATE = REPORT_DATE) %>% 
+    bind_rows() %>%
+    group_by(INCIDENT_NUMBER, REPDATE) %>%
+    summarize(
+      FATALITIES = ifelse(all(is.na(FATALITIES)), NA, max(FATALITIES, na.rm = TRUE)),
+      INJURIES = ifelse(all(is.na(INJURIES)), NA, max(INJURIES, na.rm = TRUE)),
+      COUNTY = first(COUNTY, na_rm = TRUE),
+      EST_FINAL_COSTS = ifelse(all(is.na(EST_FINAL_COSTS)), NA, max(EST_FINAL_COSTS, na.rm = TRUE)),
+      .groups = 'drop'
+    )
+)
+
+dat_99_02 <- dat_99_02$incident_informations %>%
+  left_join(dat_99_02$incident_structures, by = c('INCIDENT_NUMBER', 'REPDATE')) %>% # join last report's structures
+  left_join(dat_99_02$incidents, by = c('INCIDENT_NUMBER', 'REPDATE')) %>% # join last report's casualties, costs
   mutate( # remove minutes of lat/long outside range
     LATMIN = if_else(LATMIN >= 60, NA_real_, LATMIN),
     LONGMIN = if_else(LONGMIN >= 60, NA_real_, LONGMIN),
   ) %>% 
   transmute(
-    ics_id = INCIDENT_NUMBER,
+    ics_id = INCIDENT_ID,
     ics_wildfire_ignition_date = as_date(mdy_hms(STARTDATE, quiet = TRUE)),
     ics_wildfire_fatalities_tot = FATALITIES,
     ics_wildfire_injuries_tot = INJURIES,
@@ -80,27 +93,31 @@ dat_02_13 <- list(
                'COUNTY', 'COMPLEX'))
     ) %>% 
     bind_rows() %>% 
-    group_by(INCIDENT_NUMBER) %>% 
+    mutate(INCIDENT_ID = paste(year(mdy_hms(START_DATE)), str_trim(INCIDENT_NUMBER), str_trim(toupper(INCIDENT_NAME)), sep = '_')) %>% 
+    group_by(INCIDENT_ID) %>% 
     arrange(REPORT_DATE) %>% 
     slice_tail(n=1) %>%
-    ungroup() %>%
-    select(-REPORT_DATE),
-  
+    ungroup(),
+
   incident_structures = dat %>% 
     keep_at(~ str_detect(.x, 'IMSR_IMSR_209_INCIDENT_STRUCTURES.parquet')) %>% 
     map(select, c(IM_INCIDENT_NUMBER, IM_REPORT_DATE, DESTROYED, THREATENED)) %>%
     bind_rows() %>%
     rename(INCIDENT_NUMBER = IM_INCIDENT_NUMBER) %>%
-    group_by(INCIDENT_NUMBER) %>% 
-    arrange(IM_REPORT_DATE) %>% 
-    slice_tail(n=1) %>%
-    ungroup() %>%
-    select(-IM_REPORT_DATE)
-  
-) %>%
-  reduce(full_join, by = 'INCIDENT_NUMBER') %>%
+    rename(REPORT_DATE = IM_REPORT_DATE) %>%
+    group_by(INCIDENT_NUMBER, REPORT_DATE) %>%
+    summarize(
+      DESTROYED = ifelse(all(is.na(DESTROYED)), NA, max(DESTROYED, na.rm = TRUE)),
+      THREATENED = ifelse(all(is.na(THREATENED)), NA, max(THREATENED, na.rm = TRUE)),
+      .groups = 'drop'
+    )
+    
+) 
+
+dat_02_13 <- dat_02_13$incident_informations %>%
+  left_join(dat_02_13$incident_structures, by = c('INCIDENT_NUMBER', 'REPORT_DATE')) %>%
   transmute(
-    ics_id = INCIDENT_NUMBER,
+    ics_id = INCIDENT_ID,
     ics_wildfire_ignition_date = as_date(mdy_hms(START_DATE, quiet = TRUE)),
     ics_wildfire_fatalities_tot = FATALITIES,
     ics_wildfire_injuries_tot = INJURIES_TO_DATE,
@@ -162,13 +179,15 @@ irwin_xwalk = dat %>%
   map(
     select, 
     c(INCIDENT_NUMBER,
+      INCIDENT_IDENTIFIER,
       IRWIN_IDENTIFIER)
   ) %>% 
   map(mutate, INCIDENT_NUMBER = str_replace(as.character(INCIDENT_NUMBER), '^0+', '')) %>% 
   bind_rows() %>% 
   mutate(INCIDENT_NUMBER = str_replace(as.character(INCIDENT_NUMBER), '^0+', '')) %>% 
-  group_by(INCIDENT_NUMBER) %>% 
   filter(!is.na(IRWIN_IDENTIFIER)) %>% 
+  distinct() %>% 
+  group_by(INCIDENT_NUMBER, INCIDENT_IDENTIFIER) %>% 
   filter(n() == 1) %>% # definite links only
   ungroup()
 
@@ -178,7 +197,7 @@ dat_13_plus <- list(
     map(
       select, 
       c(INCIDENT_NUMBER,
-        #INCIDENT_IDENTIFIER,
+        INC_IDENTIFIER,
         INC209R_IDENTIFIER,
         INCIDENT_NAME,
         CURR_INCIDENT_AREA,
@@ -194,6 +213,7 @@ dat_13_plus <- list(
     ) %>% 
     map(
       mutate, 
+      INCIDENT_ID = paste(year(mdy_hms(DISCOVERY_DATE)), str_trim(INCIDENT_NUMBER), str_trim(toupper(INCIDENT_NAME)), sep = '_'),
       INCIDENT_NUMBER = str_replace(as.character(INCIDENT_NUMBER), '^0+', ''),
       POO_STATE_CODE = as.numeric(POO_STATE_CODE), 
       POO_COUNTY_CODE = as.numeric(POO_COUNTY_CODE)
@@ -202,8 +222,7 @@ dat_13_plus <- list(
     group_by(INCIDENT_NUMBER) %>% 
     arrange(LAST_MODIFIED_DATE) %>% 
     slice_tail(n=1) %>%
-    ungroup() %>%
-    select(-LAST_MODIFIED_DATE),
+    ungroup(),
   
   incident_structures = dat %>% 
     keep_at(~ str_detect(.x, 'SIT209_HISTORY_INCIDENT_209_AFFECTED_STRUCTS.parquet')) %>% 
@@ -266,9 +285,9 @@ dat_13_plus <- list(
   reduce(full_join, by = 'INC209R_IDENTIFIER') %>% 
   left_join(fips_codes_states, by = c('POO_STATE_CODE' = 'state_code')) %>% #translate fips codes to state/county
   left_join(fips_codes_counties, by = c('POO_STATE_CODE' = 'state_code', 'POO_COUNTY_CODE' = 'county_code')) %>%
-  left_join(irwin_xwalk, by = 'INCIDENT_NUMBER') %>% 
+  left_join(irwin_xwalk, by = c('INC_IDENTIFIER' = 'INCIDENT_IDENTIFIER', 'INCIDENT_NUMBER')) %>% 
   transmute(
-    ics_id = INCIDENT_NUMBER,
+    ics_id = INCIDENT_ID,
     ics_irwin_id = IRWIN_IDENTIFIER,
     ics_wildfire_ignition_date = as_date(mdy_hms(DISCOVERY_DATE, quiet = TRUE)),
     ics_wildfire_fatalities_tot = FATAL_QTY_TO_DATE_TOT,

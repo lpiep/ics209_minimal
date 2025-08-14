@@ -28,11 +28,12 @@ read_ics209_raw <- function(f){
     bind_rows()
 }
 
-download_event_ics209_raw('data/current/current_raw')
+download_event_ics209_raw('data/current/current_raw.json')
 
 # Get latest submitted report for each file
-curr_data <- read_ics209_raw('data/current/current_raw') %>% 
-  group_by(INCIDENT_NAME, INCIDENT_NUMBER) %>% 
+curr_data <- read_ics209_raw('data/current/current_raw.json') %>% 
+  mutate(INCIDENT_ID = paste(year(mdy(DISCOVERY_DATE)), str_trim(INCIDENT_NUMBER), str_trim(toupper(INCIDENT_NAME)), sep = '_')) %>%
+  group_by(INCIDENT_ID) %>% 
   arrange(SUBMITTED_DATE) %>%
   slice_tail(n = 1) %>%
   ungroup() 
@@ -46,7 +47,7 @@ parse_lat_long <- function(l){
 
 curr_data_cleaned <- curr_data %>% 
   transmute(
-    ics_id = INCIDENT_NUMBER,
+    ics_id = INCIDENT_ID,
     ics_wildfire_ignition_date =  mdy(DISCOVERY_DATE),
     ics_wildfire_fatalities_tot = FATALITIES, 
     ics_wildfire_injuries_tot = pmax(INJURIES_TO_DATE,INJURIES_THIS_REP_PERIOD), 
