@@ -49,7 +49,7 @@ curr_data_cleaned <- curr_data %>%
   transmute(
     ics_id = INCIDENT_ID,
     ics_wildfire_ignition_date =  mdy(DISCOVERY_DATE),
-    ics_wildfire_fatalities_tot = FATALITIES, 
+    ics_wildfire_fatalities_tot = as.integer(FATALITIES), 
     ics_wildfire_injuries_tot = pmax(INJURIES_TO_DATE,INJURIES_THIS_REP_PERIOD), 
     ics_name = INCIDENT_NAME,
     ics_wildfire_area = as.numeric(DISP_INC_AREA) * 0.00404686, # convert to km^2
