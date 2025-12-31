@@ -85,15 +85,18 @@ dat <- map(dir_ls('data/historical/extracts/', recurse = TRUE, regexp = '(200[2-
 
 dat_02_13 <- list(
   incident_informations = dat %>%
-    keep_at(~ str_detect(.x, 'IMSR_IMSR_209_INCIDENTS(_T)?.parquet')) %>% 
+    keep_at(~ str_detect(.x, 'IMSR_IMSR_209_INCIDENTS.parquet') | str_detect(.x, '2013/IMSR_IMSR_209_INCIDENTS_T.parquet')) %>% # catch special 2013 file (inicidents file missing)
     map(
       select, 
       any_of(c('INCIDENT_NUMBER', 'FATALITIES', 'INJURIES_TO_DATE', 'START_DATE', 'INCIDENT_NAME', 'AREA', 
-               'AREA_MEASUREMENT', 'LATITUDE', 'LONGITUDE', 'REPORT_DATE', 'UN_USTATE', 'EST_FINAL_COSTS', 
+               'AREA_MEASUREMENT', 'LATITUDE', 'LONGITUDE', 'REPORT_DATE', 'UN_USTATE', 'OWNERSHIP_STATE', 'EST_FINAL_COSTS', 
                'COUNTY', 'COMPLEX'))
     ) %>% 
     bind_rows() %>% 
-    mutate(INCIDENT_ID = paste(year(mdy_hms(START_DATE)), str_trim(INCIDENT_NUMBER), str_trim(toupper(INCIDENT_NAME)), sep = '_')) %>% 
+    mutate(
+      INCIDENT_ID = paste(year(mdy_hms(START_DATE)), str_trim(INCIDENT_NUMBER), str_trim(toupper(INCIDENT_NAME)), sep = '_'),
+      UN_USTATE = coalesce(UN_USTATE, OWNERSHIP_STATE) # where UN_USTATE is missing, try OWNERSHIP_STATE
+    ) %>% 
     group_by(INCIDENT_ID) %>% 
     arrange(REPORT_DATE) %>% 
     slice_tail(n=1) %>%

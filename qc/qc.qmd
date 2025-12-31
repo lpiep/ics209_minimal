@@ -1,6 +1,6 @@
 ---
 title: "QC"
-format: markdown_github
+format: gfm
 ---
 
 ```{r, include = FALSE}
