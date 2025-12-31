@@ -18,7 +18,7 @@ The output data set draws from different variables depending on the year of the 
 
 | Output Variable | Description | 1999-2002 | 2003-2013 | 2013-2024 | 2025+ (current_cleaned.parquet) |
 | --- | --- | --- | --- | --- | --- |
-| `ics_state` |  US State in which fire occurred | `UN_USTATE` | `UN_USTATE` | `POO_STATE_CODE` | `STATE` |
+| `ics_state` |  US State in which fire occurred | `UN_USTATE` | `UN_USTATE` (except 2013, where `OWNERSHIP_STATE` used) | `POO_STATE_CODE` | `STATE` |
 | `ics_county` |  US County in which fire occurred | `COUNTY` | `COUNTY` | `POO_COUNTY_CODE` | `POO_COUNTY` |
 | `ics_wildfire_area` |  Burned area in square kilometers | `ACRES` | `AREA` & `AREA_MEASUREMENT` | `CURR_INCIDENT_AREA` | `DISP_INC_AREA` |
 | `ics_complex` | Whether fire is a complex of multiple member fires | -- | `COMPLEX` | `SINGLE_COMPLEX_FLAG` | `COMPLEX_FLAG` |
